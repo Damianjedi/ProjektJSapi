@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake</title>
+  <meta charset="UTF-8">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #b13535, #1d8500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    canvas {
+      border: 1px solid white;
+      background-color: #62ff00;
+    }
+
+    #back-to-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 10px;
+      text-align: center;
+      background-color: #333;
+      color: #fff;
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+
+    #score {
+      margin-top: 20px;
+      font-size: 20px;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <a href="minigry.html" id="back-to-menu">Powrót do wyboru aplikacji</a>
+  <canvas width="400" height="400" id="game"></canvas>
+  <div id="score">Punkty: 0</div>
+  <script>
+    var canvas = document.getElementById('game');
+    var context = canvas.getContext('2d');
+
+    var grid = 16;
+    var count = 0;
+    var score = 0;
+
+    var snake = {
+      x: 160,
+      y: 160,
+      dx: grid,
+      dy: 0,
+      cells: [],
+      maxCells: 4
+    };
+
+    var apple = {
+      x: 320,
+      y: 320
+    };
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function loop() {
+      requestAnimationFrame(loop);
+
+      if (++count < 6) {
+        return;
+      }
+
+      count = 0;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      snake.x += snake.dx;
+      snake.y += snake.dy;
+
+      if (snake.x < 0) {
+        snake.x = canvas.width - grid;
+      } else if (snake.x >= canvas.width) {
+        snake.x = 0;
+      }
+
+      if (snake.y < 0) {
+        snake.y = canvas.height - grid;
+      } else if (snake.y >= canvas.height) {
+        snake.y = 0;
+      }
+
+      snake.cells.unshift({ x: snake.x, y: snake.y });
+
+      if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
+      }
+
+      context.fillStyle = 'red';
+      context.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+      context.fillStyle = 'blue';
+      snake.cells.forEach(function (cell, index) {
+        context.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+        if (cell.x === apple.x && cell.y === apple.y) {
+          snake.maxCells++;
+          score += 1;
+          updateScore();
+          apple.x = getRandomInt(0, 25) * grid;
+          apple.y = getRandomInt(0, 25) * grid;
+        }
+
+        for (var i = index + 1; i < snake.cells.length; i++) {
+          if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+            endGame();
+          }
+        }
+      });
+    }
+
+    function endGame() {
+      alert('Koniec gry! Wąż uderzył w sam siebie. Twój wynik: ' + score);
+      resetGame();
+    }
+
+    function resetGame() {
+      snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
+      apple = { x: 320, y: 320 };
+      score = 0;
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById('score').innerText = 'Punkty: ' + score;
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft' && snake.dx === 0) {
+        snake.dx = -grid;
+        snake.dy = 0;
+      } else if (e.key === 'ArrowUp' && snake.dy === 0) {
+        snake.dy = -grid;
+        snake.dx = 0;
+      } else if (e.key === 'ArrowRight' && snake.dx === 0) {
+        snake.dx = grid;
+        snake.dy = 0;
+      } else if (e.key === 'ArrowDown' && snake.dy === 0) {
+        snake.dy = grid;
+        snake.dx = 0;
+      }
+    });
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

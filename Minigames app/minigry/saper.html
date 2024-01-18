@@ -1,0 +1,169 @@
+<html>
+  <head>
+
+    <style>
+      body {
+    background: linear-gradient(
+        135deg,
+        #41f7c6,
+        #8045ff
+        );
+  }
+
+      #back-to-menu {
+          position: fixed;
+          top: 0;
+          left: 0;
+          padding: 10px;
+          text-align: center;
+          background-color: #333;
+          color: #fff;
+          text-decoration: none;
+          margin-bottom: 20px;
+      }
+
+  </style>
+
+  </head>
+<body oncontextmenu='return false;' >
+  <a href="minigry.html" id="back-to-menu">Powrót do wyboru aplikacji</a>
+<br><br><br>
+<label id='stan'></label>
+ 
+<script>
+const rzedy = 15;
+const kolumny = 20;
+let miny, pozostalo, odkryte;
+let stan = document.getElementById('stan');
+stan.addEventListener('click', inicjuj)
+ 
+let plansza = new Array(rzedy);
+let obraz = new Array(rzedy);
+let pole = new Array(rzedy);
+for (let i = 0; i < plansza.length; i++) {
+  plansza[i] = new Array(kolumny);
+  obraz[i] = new Array(kolumny);
+  pole[i] = new Array(kolumny)
+}
+ 
+inicjuj();
+ 
+function sprawdz(rzad, kolumna) {
+  if (kolumna >= 0 && rzad >= 0 && kolumna < kolumny && rzad < rzedy)
+    return plansza[rzad][kolumna];
+}
+ 
+function inicjuj() {
+  miny = 30;
+  pozostalo = miny;
+  odkryte = 0;
+  stan.innerHTML = ('Kliknij na polach, by je odkryć');
+  for (let rzad = 0; rzad < rzedy; rzad++)
+    for (let kolumna = 0; kolumna < kolumny; kolumna++) {
+      let index = rzad * kolumny + kolumna;
+      pole[rzad][kolumna] = document.createElement('img');
+      pole[rzad][kolumna].src = 'obrazy/ukryte.png';
+      pole[rzad][kolumna].style = 'position:absolute;height:30px; width: 30px';
+      pole[rzad][kolumna].style.top = 150 + rzad * 30;
+      pole[rzad][kolumna].style.left = 50 + kolumna * 30;
+      pole[rzad][kolumna].addEventListener('mousedown', klik);
+      pole[rzad][kolumna].id = index;
+      document.body.appendChild(pole[rzad][kolumna]);
+      obraz[rzad][kolumna] = 'ukryte';
+      plansza[rzad][kolumna] = '';
+    }
+ 
+  let ustawione = 0;
+  while (ustawione < miny){
+    let kolumna = Math.floor(Math.random() * kolumny);
+    let rzad = Math.floor(Math.random() * rzedy);
+ 
+    if (plansza[rzad][kolumna] != 'mina') {
+      plansza[rzad][kolumna] = 'mina';
+      ustawione++;
+    }
+  } 
+ 
+  for (let kolumna = 0; kolumna < kolumny; kolumna++)
+    for (let rzad = 0; rzad < rzedy; rzad++) {
+      if (sprawdz(rzad, kolumna) != 'mina') {
+        plansza[rzad][kolumna] =
+          ((sprawdz(rzad + 1, kolumna) == 'mina') | 0) +
+          ((sprawdz(rzad + 1, kolumna - 1) == 'mina') | 0) +
+          ((sprawdz(rzad + 1, kolumna + 1) == 'mina') | 0) +
+          ((sprawdz(rzad - 1, kolumna) == 'mina') | 0) +
+          ((sprawdz(rzad - 1, kolumna - 1) == 'mina') | 0) +
+          ((sprawdz(rzad - 1, kolumna + 1) == 'mina') | 0) +
+          ((sprawdz(rzad, kolumna - 1) == 'mina') | 0) +
+          ((sprawdz(rzad, kolumna + 1) == 'mina') | 0);
+      }
+    }
+}
+ 
+function klik(event) {
+  let zrodlo = event.target;
+  let id = zrodlo.id;
+  let rzad = Math.floor(id / kolumny);
+  let kolumna = id % kolumny;
+ 
+  if (event.which == 3) {
+    switch (obraz[rzad][kolumna]) {
+      case 'ukryte':
+        pole[rzad][kolumna].src = 'obrazy/flaga.png';
+        pozostalo--;
+        obraz[rzad][kolumna] = 'flaga';
+        break;
+      case 'flaga':
+        pole[rzad][kolumna].src = 'obrazy/pytanie.png';
+        pozostalo++;
+        obraz[rzad][kolumna] = 'pytanie';
+        break;
+      case 'pytanie':
+        pole[rzad][kolumna].src = 'obrazy/ukryte.png';
+        obraz[rzad][kolumna] = 'ukryte';
+        break;
+    }
+    event.preventDefault();
+  }
+  stan.innerHTML = 'Pozostało min: ' + pozostalo;
+ 
+  if (event.which == 1 && obraz[rzad][kolumna] != 'flaga') {
+    if (plansza[rzad][kolumna] == 'mina') {
+      for (let rzad = 0; rzad < rzedy; rzad++)
+        for (let kolumna = 0; kolumna < kolumny; kolumna++) {
+          if (plansza[rzad][kolumna] == 'mina') {
+            pole[rzad][kolumna].src = 'obrazy/mina.png';
+          }
+          if (plansza[rzad][kolumna] != 'mina' && obraz[rzad][kolumna] == 'flaga') {
+            pole[rzad][kolumna].src = 'obrazy/pomylka.png';
+          }
+        }
+      stan.innerHTML = 'KONIEC GRY<br><br>Kliknij tutaj, by zacząć nową grę.';
+    } else
+    if (obraz[rzad][kolumna] == 'ukryte') odkryj(rzad, kolumna);
+  }
+ 
+  if (odkryte == rzedy * kolumny - miny)
+    stan.innerHTML = 'Wygrałeś!<br><br>Kliknij tutaj, by zacząć nową grę.';
+}
+ 
+function odkryj(rzad, kolumna) {
+  pole[rzad][kolumna].src = 'obrazy/' + plansza[rzad][kolumna] + '.png';
+  if (plansza[rzad][kolumna] != 'mina' && obraz[rzad][kolumna] == 'ukryte')
+    odkryte++;
+  obraz[rzad][kolumna] = plansza[rzad][kolumna];
+ 
+  if (plansza[rzad][kolumna] == 0) {
+    if (kolumna > 0 && obraz[rzad][kolumna - 1] == 'ukryte') odkryj(rzad, kolumna - 1);
+    if (kolumna < (kolumny - 1) && obraz[rzad][+kolumna + 1] == 'ukryte') odkryj(rzad, +kolumna + 1);
+    if (rzad < (rzedy - 1) && obraz[+rzad + 1][kolumna] == 'ukryte') odkryj(+rzad + 1, kolumna);
+    if (rzad > 0 && obraz[rzad - 1][kolumna] == 'ukryte') odkryj(rzad - 1, kolumna);
+    if (kolumna > 0 && rzad > 0 && obraz[rzad - 1][kolumna - 1] == 'ukryte') odkryj(rzad - 1, kolumna - 1);
+    if (kolumna > 0 && rzad < (rzedy - 1) && obraz[+rzad + 1][kolumna - 1] == 'ukryte') odkryj(+rzad + 1, kolumna - 1);
+    if (kolumna < (kolumny - 1) && rzad < (rzedy - 1) && obraz[+rzad + 1][+kolumna + 1] == 'ukryte') odkryj(+rzad + 1, +kolumna + 1);
+    if (kolumna < (kolumny - 1) && rzad > 0 && obraz[rzad - 1][+kolumna + 1] == 'ukryte') odkryj(rzad - 1, +kolumna + 1);
+  }
+}
+ 
+</script>
+</body></html>

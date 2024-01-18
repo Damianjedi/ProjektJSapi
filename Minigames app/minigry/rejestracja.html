@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rejestracja</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    #container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2>Rejestracja</h2>
+    <form id="registerForm">
+      <label for="registerUsername">Nazwa użytkownika:</label>
+      <input type="text" id="registerUsername" required>
+
+      <label for="registerPassword">Hasło:</label>
+      <input type="password" id="registerPassword" required>
+      
+      <label for="confirmPassword">Potwierdź hasło:</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required>
+
+      <button type="submit">Zarejestruj się</button>
+    </form>
+
+    <hr>
+
+    <p>Masz już konto? <a href="logowanie.html">Zaloguj się</a>.</p>
+  </div>
+
+  <script>
+   document.addEventListener('DOMContentLoaded', function () {
+  const registerForm = document.getElementById('registerForm');
+
+  registerForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const username = document.getElementById('registerUsername').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+      alert('Hasła nie są identyczne.');
+      return;
+    }
+
+    fetch('../routes/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(errorData => {
+            throw new Error(errorData.error || 'Błąd rejestracji');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Odpowiedź od serwera', data);
+        alert('Rejestracja zakończona powodzeniem. Proszę przejść do logowania.')
+      })
+      .catch(error => {
+        console.error('Błąd rejestracji:', error.message);
+        alert('Użytkownik o takiej nazwie użytkownika już istnieje, spróbuj innej nazwy')
+      });
+  });
+});
+
+  </script>
+</body>
+</html>
